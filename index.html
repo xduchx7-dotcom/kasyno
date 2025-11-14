@@ -1,136 +1,334 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>KASYNKO – Panel + Podgląd</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kasyno Shulker — Panel</title>
+
   <style>
-    body { font-family: 'Segoe UI', Arial; background:#0a0a0a; color:white; padding:20px; }
-    h1, h2 { color:#5be8ff; text-shadow:0 0 10px #00c8ff; }
-
-    .section {
-      background: linear-gradient(145deg, #111 0%, #0d0d0d 40%, #141414 100%);
-      padding:25px;
-      margin:25px 0;
-      border-radius:18px;
-      border:1px solid #1f1f1f;
-      box-shadow:0 0 25px #0088ff33;
+    :root{
+      --bg:#0a0e1a;
+      --card:#0f1626;
+      --border:#1a2336;
+      --text:#dce7ff;
+      --sub:#8fa2c6;
+      --accent:#ffd56b;
+      --accent2:#6bb6ff;
     }
-
-    .box {
-      background:#131313;
-      padding:14px;
-      margin:10px 0;
+    body{
+      margin:0;
+      background:var(--bg);
+      font-family:Inter,Arial;
+      color:var(--text);
+    }
+    .wrap{
+      max-width:1300px;
+      margin:20px auto;
+      padding:10px;
+    }
+    .topbar{
+      background:var(--card);
+      padding:16px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .title{
+      font-size:34px;
+      font-weight:800;
+      text-align:center;
+      width:100%;
+      color:var(--accent2);
+      text-shadow:0 0 10px #234a89;
+    }
+    .vault-box,.clock-box{
+      background:#0c1322;
+      padding:10px 14px;
       border-radius:10px;
-      border:1px solid #222;
-      box-shadow:0 0 10px #0088ff22;
+      border:1px solid var(--border);
+      font-size:14px;
     }
-
-    input, button {
+    .vault-val{
+      font-size:22px;
+      color:var(--accent);
+      font-weight:700;
+    }
+    .midinfo{
+      margin-top:10px;
+      background:var(--card);
       padding:12px;
-      margin:6px 0;
+      border-radius:12px;
+      border:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      font-size:16px;
+    }
+    .bigbox{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:340px 1fr 340px;
+      gap:16px;
+    }
+    .panel{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      min-height:240px;
+    }
+    .panel h3{
+      margin:5px 0 10px;
+      font-size:19px;
+      color:var(--accent2);
+    }
+    .player{
+      display:flex;
+      justify-content:space-between;
+      background:#101a2e;
+      border:1px solid var(--border);
+      padding:10px;
+      border-radius:10px;
+      margin-bottom:8px;
+    }
+    .hist{
+      background:#101a2e;
+      border:1px solid var(--border);
+      padding:8px;
       border-radius:8px;
-      border:none;
-      font-size:15px;
+      margin-bottom:8px;
+      font-size:14px;
     }
-
-    input {
-      width:240px;
-      background:#0f0f0f;
-      color:white;
-      border:1px solid #333;
+    .timer{
+      font-size:40px;
+      font-weight:800;
+      color:var(--accent);
+      text-align:center;
+      margin:10px 0;
     }
-
-    button {
-      background:linear-gradient(90deg, #00c8ff, #0077ff);
+    .winner-ann{
+      margin-top:12px;
+      padding:10px;
+      border-radius:8px;
+      background:linear-gradient(90deg,rgba(255,213,107,0.1),transparent);
+      border:1px solid rgba(255,213,107,0.18);
+    }
+    .btn{
+      background:#12314b;
+      border:1px solid var(--border);
+      padding:8px 10px;
+      border-radius:8px;
+      color:var(--text);
       cursor:pointer;
-      font-weight:bold;
-      color:#000;
-      box-shadow:0 0 10px #00c8ff66;
     }
-
-    button:hover {
-      background:linear-gradient(90deg, #38e0ff, #0a9fff);
-      box-shadow:0 0 15px #00c8ffaa;
-    }
-
   </style>
 </head>
 <body>
-  <h1>KASYNKO – Podgląd wyników</h1>
 
-  <div class="section">
-    <h2>Wpłaty</h2>
-    <div id="wplaty"></div>
+<div class="wrap">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="vault-box">
+      Skarbiec:<br><span class="vault-val" id="vault">1.92M</span>
+    </div>
+
+    <div class="title">Kasyno Shulker<br>
+      <span style="font-size:15px;color:var(--sub)">Najbardziej opłacalna ruletka!</span>
+    </div>
+
+    <div class="clock-box">
+      Czas:<br><span id="clock">--:--:--</span>
+    </div>
   </div>
 
-  <div class="section">
-    <h2>Wygrane</h2>
-    <div id="wygrane"></div>
+  <!-- MID BAR -->
+  <div class="midinfo">
+    Szansa na wypłacenie ze skarbca przy wygranej: <b>0.5%</b>
+    <span style="font-size:18px">/pay <b>Vexxiann</b> $$$</span>
   </div>
 
-  <div class="section">
-    <h2>Panel admina</h2>
+  <!-- MAIN GRID -->
+  <div class="bigbox">
 
-    <h3>Dodaj wpłatę</h3>
-    <input id="wplataGracz" placeholder="Gracz">
-    <input id="wplataKwota" type="number" placeholder="Kwota">
-    <button onclick="dodajWplate()">Dodaj</button>
+    <!-- GRACZE -->
+    <div class="panel">
+      <h3>Gracze</h3>
+      <div id="players"></div>
 
-    <h3>Ustaw zwycięzcę</h3>
-    <input id="winGracz" placeholder="Gracz">
-    <input id="winKwota" type="number" placeholder="Kwota">
-    <button onclick="dodajWygrana()">Ustaw wygraną</button>
+      <div style="margin-top:6px;color:var(--accent)">
+        Suma: <span id="sum">0</span>
+      </div>
 
-    <h3>Eksport JSON</h3>
-    <button onclick="exportJSON()">Pobierz data.json</button>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <button class="btn" id="manual-draw">Losuj teraz</button>
+        <button class="btn" id="refresh">Odśwież</button>
+      </div>
+
+      <div id="winner-area"></div>
+    </div>
+
+    <!-- HISTORIA -->
+    <div class="panel">
+      <h3>Historia</h3>
+
+      <div><b>Ostatnie wygrane</b></div>
+      <div id="wins"></div>
+
+      <br>
+
+      <div><b>Ostatnie wpłaty</b></div>
+      <div id="pays"></div>
+    </div>
+
+    <!-- PANEL BOCZNY -->
+    <div class="panel">
+      <h3>Panel</h3>
+
+      <div class="timer" id="timer">60s</div>
+      <div style="color:var(--sub);text-align:center">
+        Automatyczne losowanie co 60 sekund.
+      </div>
+
+      <br>
+
+      <div><b>Największy szczęściarz</b></div>
+      <div class="hist" id="top-lucky">-</div>
+
+      <div><b>Największa wygrana tej sesji</b></div>
+      <div class="hist" id="top-win">-</div>
+
+      <div><b>Najwięcej wygranych</b></div>
+      <div class="hist" id="most-wins">-</div>
+
+      <div><b>Najwięcej przegranych</b></div>
+      <div class="hist" id="most-losses">-</div>
+    </div>
+
   </div>
+</div>
 
-  <script>
-    let data = {
-      wplaty: [],
-      wygrane: []
-    };
+<script>
+/* -------------------------
+   ZEGAREK
+-------------------------- */
+setInterval(()=>{
+  let d=new Date();
+  let h=String(d.getHours()).padStart(2,'0');
+  let m=String(d.getMinutes()).padStart(2,'0');
+  let s=String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+},1000);
 
-    function refresh() {
-      const w = document.getElementById("wplaty");
-      const wy = document.getElementById("wygrane");
-      w.innerHTML = "";
-      wy.innerHTML = "";
 
-      data.wplaty.forEach(x => {
-        w.innerHTML += `<div class='box'>${x.gracz}: ${x.kwota}</div>`;
-      });
+/* -------------------------
+   MOCK DANYCH (podmień na /data.json)
+-------------------------- */
+let players = [
+  {name:"fht_", amount:905},
+  {name:"maskaraboxpvp", amount:1985}
+];
 
-      data.wygrane.forEach(x => {
-        wy.innerHTML += `<div class='box'>${x.gracz}: ${x.kwota}</div>`;
-      });
+let history = [
+  {type:"win", player:"Torfdus", amount:147000},
+  {type:"win", player:"NAJT", amount:202440},
+  {type:"win", player:"pirat33", amount:59260},
+  {type:"pay", player:"maskaraboxpvp", amount:1985}
+];
+
+let vault = 1920000;
+
+
+/* -------------------------
+   RENDER — GRACZE
+-------------------------- */
+function renderPlayers(){
+  const box = document.getElementById('players');
+  box.innerHTML = "";
+
+  let total = players.reduce((a,b)=>a+b.amount,0);
+  document.getElementById('sum').textContent = total.toLocaleString();
+
+  players.forEach(p=>{
+    let pct = ((p.amount/total)*100).toFixed(2);
+
+    box.innerHTML += `
+      <div class="player">
+        <div>
+          <strong>${p.name}</strong>
+          <div style="font-size:12px;color:var(--sub)">Stawka: ${p.amount}</div>
+        </div>
+        <div>${p.amount} — <b>${pct}%</b></div>
+      </div>`;
+  });
+}
+renderPlayers();
+
+
+/* -------------------------
+   RENDER — HISTORIA
+-------------------------- */
+function renderHistory(){
+  const wins = document.getElementById("wins");
+  const pays = document.getElementById("pays");
+
+  wins.innerHTML = "";
+  pays.innerHTML = "";
+
+  history.forEach(h=>{
+    if(h.type==="win"){
+      wins.innerHTML += `<div class="hist">${h.player} — ${h.amount.toLocaleString()}$</div>`;
     }
-
-    function dodajWplate() {
-      let g = document.getElementById("wplataGracz").value;
-      let k = parseInt(document.getElementById("wplataKwota").value);
-      if(!g || !k) return alert("Podaj dane!");
-      data.wplaty.push({gracz:g, kwota:k});
-      refresh();
+    if(h.type==="pay"){
+      pays.innerHTML += `<div class="hist">${h.player} — ${h.amount.toLocaleString()}$</div>`;
     }
+  });
+}
+renderHistory();
 
-    function dodajWygrana() {
-      let g = document.getElementById("winGracz").value;
-      let k = parseInt(document.getElementById("winKwota").value);
-      if(!g || !k) return alert("Podaj dane!");
-      data.wygrane.push({gracz:g, kwota:k});
-      refresh();
-    }
 
-    function exportJSON() {
-      const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "data.json";
-      a.click();
-      URL.revokeObjectURL(url);
+/* -------------------------
+   LOSOWANIE
+-------------------------- */
+function drawWinner(){
+  if(players.length === 0) return;
+
+  let total = players.reduce((a,b)=>a+b.amount,0);
+  let r = Math.random() * total;
+
+  let sum = 0;
+  let winner = null;
+
+  for(const p of players){
+    sum += p.amount;
+    if(r <= sum){
+      winner = p;
+      break;
     }
-  </script>
+  }
+
+  document.getElementById("winner-area").innerHTML =
+    `<div class="winner-ann"><b>${winner.name}</b> wygrał rundę!</div>`;
+}
+
+document.getElementById("manual-draw").onclick = drawWinner;
+
+
+/* -------------------------
+   TIMER — AUTO LOSOWANIE
+-------------------------- */
+let t = 60;
+
+setInterval(()=>{
+  t--;
+  if(t <= 0){
+    drawWinner();
+    t = 60;
+  }
+  document.getElementById("timer").textContent = t + "s";
+},1000);
+</script>
+
 </body>
 </html>
