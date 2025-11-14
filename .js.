@@ -1,0 +1,85 @@
+const mineflayer = require('mineflayer');
+const fs = require('fs');
+
+// Konfiguracja bota
+const bot = mineflayer.createBot({
+    host: 'localhost', // Adres serwera Minecraft
+    port: 25565, // Port serwera Minecraft
+    username: 'CasinoBot' // Nazwa użytkownika bota
+});
+
+// Ścieżka do pliku data.json
+const dataFilePath = 'data.json';
+
+// Funkcja do wczytywania danych z pliku
+function loadData() {
+    try {
+        const data = fs.readFileSync(dataFilePath, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Błąd podczas wczytywania data.json:', error);
+        return { vault: 0, players: [], history: [] }; // Zwracamy domyślne dane w przypadku błędu
+    }
+}
+
+// Funkcja do zapisywania danych do pliku
+function saveData(data) {
+    try {
+        fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf8');
+        console.log('Zapisano data.json');
+    } catch (error) {
+        console.error('Błąd podczas zapisywania data.json:', error);
+    }
+}
+
+// Obsługa zdarzenia "chat" (wiadomości na czacie)
+bot.on('chat', (chatMessage) => {
+    const message = chatMessage.toString();
+    console.log(`[CHAT] ${message}`);
+
+    // Sprawdzamy, czy wiadomość to komenda /pay
+    if (message.startsWith('/pay')) {
+        const parts = message.split(' ');
+        if (parts.length === 3) {
+            const nick = parts[1];
+            const amount = parseInt(parts[2]);
+
+            if (!isNaN(amount) && amount > 0) {
+                // Wczytujemy dane z pliku
+                const data = loadData();
+
+                // Aktualizujemy dane (przykład: dodajemy gracza lub zwiększamy jego wpłatę)
+                let playerFound = false;
+                for (const player of data.players) {
+                    if (player.nick === nick) {
+                        player.amount += amount;
+                        playerFound = true;
+                        break;
+                    }
+                }
+                if (!playerFound) {
+                    data.players.push({ nick: nick, amount: amount });
+                }
+
+                // Zapisujemy zaktualizowane dane
+                saveData(data);
+
+                bot.chat(`Zaktualizowano wpłatę dla ${nick}.`);
+            } else {
+                bot.chat('Błędna kwota. Użyj /pay <nick> <kwota>');
+            }
+        } else {
+            bot.chat('Błędny format komendy. Użyj /pay <nick> <kwota>');
+        }
+    }
+});
+
+// Obsługa zdarzenia "login" (po zalogowaniu bota do serwera)
+bot.on('login', () => {
+    console.log('Bot zalogowany!');
+});
+
+// Obsługa zdarzenia "error" (błędy)
+bot.on('error', (err) => {
+    console.error('Błąd:', err);
+});
