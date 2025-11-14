@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>KASYNKO – Panel + Podgląd</title>
+  <style>
+    body { font-family: 'Segoe UI', Arial; background:#0a0a0a; color:white; padding:20px; }
+    h1, h2 { color:#5be8ff; text-shadow:0 0 10px #00c8ff; }
+
+    .section {
+      background: linear-gradient(145deg, #111 0%, #0d0d0d 40%, #141414 100%);
+      padding:25px;
+      margin:25px 0;
+      border-radius:18px;
+      border:1px solid #1f1f1f;
+      box-shadow:0 0 25px #0088ff33;
+    }
+
+    .box {
+      background:#131313;
+      padding:14px;
+      margin:10px 0;
+      border-radius:10px;
+      border:1px solid #222;
+      box-shadow:0 0 10px #0088ff22;
+    }
+
+    input, button {
+      padding:12px;
+      margin:6px 0;
+      border-radius:8px;
+      border:none;
+      font-size:15px;
+    }
+
+    input {
+      width:240px;
+      background:#0f0f0f;
+      color:white;
+      border:1px solid #333;
+    }
+
+    button {
+      background:linear-gradient(90deg, #00c8ff, #0077ff);
+      cursor:pointer;
+      font-weight:bold;
+      color:#000;
+      box-shadow:0 0 10px #00c8ff66;
+    }
+
+    button:hover {
+      background:linear-gradient(90deg, #38e0ff, #0a9fff);
+      box-shadow:0 0 15px #00c8ffaa;
+    }
+
+  </style>
+</head>
+<body>
+  <h1>KASYNKO – Podgląd wyników</h1>
+
+  <div class="section">
+    <h2>Wpłaty</h2>
+    <div id="wplaty"></div>
+  </div>
+
+  <div class="section">
+    <h2>Wygrane</h2>
+    <div id="wygrane"></div>
+  </div>
+
+  <div class="section">
+    <h2>Panel admina</h2>
+
+    <h3>Dodaj wpłatę</h3>
+    <input id="wplataGracz" placeholder="Gracz">
+    <input id="wplataKwota" type="number" placeholder="Kwota">
+    <button onclick="dodajWplate()">Dodaj</button>
+
+    <h3>Ustaw zwycięzcę</h3>
+    <input id="winGracz" placeholder="Gracz">
+    <input id="winKwota" type="number" placeholder="Kwota">
+    <button onclick="dodajWygrana()">Ustaw wygraną</button>
+
+    <h3>Eksport JSON</h3>
+    <button onclick="exportJSON()">Pobierz data.json</button>
+  </div>
+
+  <script>
+    let data = {
+      wplaty: [],
+      wygrane: []
+    };
+
+    function refresh() {
+      const w = document.getElementById("wplaty");
+      const wy = document.getElementById("wygrane");
+      w.innerHTML = "";
+      wy.innerHTML = "";
+
+      data.wplaty.forEach(x => {
+        w.innerHTML += `<div class='box'>${x.gracz}: ${x.kwota}</div>`;
+      });
+
+      data.wygrane.forEach(x => {
+        wy.innerHTML += `<div class='box'>${x.gracz}: ${x.kwota}</div>`;
+      });
+    }
+
+    function dodajWplate() {
+      let g = document.getElementById("wplataGracz").value;
+      let k = parseInt(document.getElementById("wplataKwota").value);
+      if(!g || !k) return alert("Podaj dane!");
+      data.wplaty.push({gracz:g, kwota:k});
+      refresh();
+    }
+
+    function dodajWygrana() {
+      let g = document.getElementById("winGracz").value;
+      let k = parseInt(document.getElementById("winKwota").value);
+      if(!g || !k) return alert("Podaj dane!");
+      data.wygrane.push({gracz:g, kwota:k});
+      refresh();
+    }
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "data.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
