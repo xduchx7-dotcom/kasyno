@@ -1,5 +1,10 @@
 {
   "vault": 0,
   "players": [],
-  "history": []
+  "history": [
+    {
+      "winner": null,
+      "amount": 0
+    }
+  ]
 }
