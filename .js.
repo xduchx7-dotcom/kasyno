@@ -1,75 +1,38 @@
-// --- KONFIGURACJA ---
-const PLATNOSCI_FILE = 'platnosci.json'; // Twój plik z wpłatami
-const ODŚWIEŻANIE_MS = 5000; // co ile ms odświeżamy dane
-let gracze = [];
-let sumaPuli = 0;
-let licznik = 60; // sekundy do losowania
+let state = {
+  players: [],
+  history: [],
+  vault: 0
+};
 
-// --- ELEMENTY HTML ---
-const listaGraczyEl = document.getElementById('lista-graczy');
-const sumaPuliEl = document.getElementById('suma-puli');
-const licznikEl = document.getElementById('licznik');
-const losujBtn = document.getElementById('losuj');
-
-// --- FUNKCJE ---
-async function pobierzDane() {
-    try {
-        const response = await fetch(PLATNOSCI_FILE);
-        if (!response.ok) throw new Error('Nie udało się pobrać danych');
-        const dane = await response.json();
-        gracze = dane;
-        sumaPuli = gracze.reduce((acc, g) => acc + Number(g.kwota || 0), 0);
-        aktualizujWidok();
-    } catch (err) {
-        console.error(err);
-        // jeśli błąd, można użyć pustej listy
-        gracze = [];
-        sumaPuli = 0;
-        aktualizujWidok();
-    }
+// Funkcja renderująca panel
+function renderAll(){
+  const playersEl = document.getElementById('players');
+  playersEl.innerHTML = state.players.map(p => `${p.name}: ${p.amount} zł`).join('<br>');
+  
+  const vaultEl = document.getElementById('vault');
+  vaultEl.textContent = `Pula: ${state.vault} zł`;
 }
 
-function aktualizujWidok() {
-    // Lista graczy
-    listaGraczyEl.innerHTML = '';
-    gracze.forEach(g => {
-        const li = document.createElement('li');
-        li.textContent = `${g.nick}: $${g.kwota}`;
-        listaGraczyEl.appendChild(li);
+// Funkcja do pobierania wpłat z serwera
+async function fetchPayments(){
+  try {
+    const res = await fetch('/payments.json'); // plik z wpłatami
+    const json = await res.json();
+
+    let newVault = 0;
+    state.players = json.players.map(p => {
+      newVault += Number(p.amount);
+      return { name: p.name, amount: Number(p.amount) };
     });
-    // Suma puli
-    sumaPuliEl.textContent = `Suma w puli: $${sumaPuli}`;
-    // Licznik
-    licznikEl.textContent = `Następne losowanie za: ${licznik}s`;
+    state.vault = newVault;
+
+    state.history = json.history || [];
+    renderAll();
+  } catch(err){
+    console.error('Błąd pobierania wpłat:', err);
+  }
 }
 
-function startLicznik() {
-    setInterval(() => {
-        licznik--;
-        if (licznik <= 0) {
-            licznik = 60; // reset licznika
-            losuj();
-        }
-        aktualizujWidok();
-    }, 1000);
-}
-
-function losuj() {
-    if (gracze.length === 0) return alert('Brak graczy do losowania!');
-    // Losowanie zwycięzcy
-    const index = Math.floor(Math.random() * gracze.length);
-    const zwyciezca = gracze[index];
-    alert(`🎉 Wygrał ${zwyciezca.nick}! Kwota: $${zwyciezca.kwota}`);
-    // reset puli i graczy po losowaniu
-    gracze = [];
-    sumaPuli = 0;
-    aktualizujWidok();
-}
-
-// --- EVENTY ---
-losujBtn.addEventListener('click', losuj);
-
-// --- URUCHOMIENIE ---
-pobierzDane(); // pierwsze pobranie
-startLicznik(); // licznik
-setInterval(pobierzDane, ODŚWIEŻANIE_MS); // odświeżanie co 5s
+// Co 5 sekund pobiera nowe wpłaty
+setInterval(fetchPayments, 5000);
+fetchPayments(); // od razu przy starcie
