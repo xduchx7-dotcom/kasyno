@@ -1,1 +1,9 @@
-[]
+{
+  "players": [
+    {"name":"Janek","amount":50},
+    {"name":"Ania","amount":30}
+  ],
+  "history":[
+    {"player":"Janek","amount":50,"time":"2025-11-16T12:00:00Z"}
+  ]
+}
