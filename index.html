@@ -1,115 +1,509 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shulker Kasyno</title>
-<style>
-  body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kasyno Shulker — Panel PRO</title>
+  <style>
+    /* ---- Paleta (podobna, ale inna) ---- */
+    :root{
+      --bg:#07121a;        /* ciemne tło */
+      --card:#0f1b26;      /* karty/panele */
+      --muted:#9db0c6;
+      --accent1:#ffb86b;   /* złote akcenty */
+      --accent2:#7dd3fc;   /* niebieskie akcenty */
+      --glass: rgba(255,255,255,0.03);
+    }
 
-  h1 {
-    color: #ff6aff;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 8px #000;
-  }
+    /* ---- Global ---- */
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+      background: linear-gradient(180deg,#04121a 0%, #071923 100%);
+      color:#e7f3ff;
+      -webkit-font-smoothing:antialiased;
+    }
+    .wrap{max-width:1200px;margin:18px auto;padding:18px;display:grid;gap:14px}
 
-  #countdown {
-    font-size: 20px;
-    margin-bottom: 20px;
-    color: #00ffcc;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px #000;
-  }
+    /* ---- Top bar ---- */
+    .top{
+      display:flex;gap:12px;align-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border:1px solid rgba(255,255,255,0.03);
+      padding:12px;border-radius:12px;
+      box-shadow:0 8px 30px rgba(2,8,20,0.6);
+    }
+    .vault{
+      min-width:170px;padding:10px;border-radius:10px;
+      background:linear-gradient(180deg, rgba(125,211,252,0.04), transparent);
+      border:1px solid rgba(125,211,252,0.08);
+      text-align:center;
+    }
+    .vault .label{font-size:12px;color:var(--muted)}
+    .vault .value{font-size:26px;font-weight:800;color:var(--accent1);margin-top:6px}
 
-  #payments {
-    list-style: none;
-    padding: 0;
-    width: 350px;
-  }
+    .title{
+      flex:1;text-align:center;
+    }
+    .title h1{margin:0;font-size:26px;letter-spacing:0.6px;color:var(--accent2)}
+    .title p{margin:2px 0 0;color:var(--muted);font-size:13px}
 
-  #payments li {
-    background: #222;
-    margin: 8px 0;
-    padding: 12px;
-    border-radius: 10px;
-    box-shadow: 1px 1px 8px #000;
-    transition: all 0.3s ease;
-  }
+    .clock{min-width:120px;text-align:right;color:var(--muted);font-size:14px}
 
-  #payments li.new {
-    background: #00ffcc;
-    color: #000;
-    font-weight: bold;
-    animation: highlight 1s ease-in-out;
-  }
+    /* ---- main grid ---- */
+    .grid{
+      display:grid;
+      grid-template-columns:320px 1fr 320px;
+      gap:14px;
+    }
+    @media(max-width:1000px){ .grid{grid-template-columns:1fr; } .vault{min-width:unset} .clock{text-align:left} }
 
-  @keyframes highlight {
-    0% { background: #00ffcc; }
-    100% { background: #222; color: #fff; }
-  }
-</style>
+    /* ---- panels ---- */
+    .card{
+      background:var(--card);
+      border-radius:12px;padding:12px;
+      border:1px solid rgba(255,255,255,0.03);
+      min-height:160px;
+    }
+    .card h3{margin:0 0 10px 0;color:var(--accent2);font-size:16px}
+    .muted{color:var(--muted);font-size:13px}
+
+    /* ---- players ---- */
+    .players{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding-right:4px}
+    .player{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:8px;border-radius:10px;background:var(--glass);
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .player .left{display:flex;gap:10px;align-items:center}
+    .avatar{
+      width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+      font-weight:700;color:#041827;background:linear-gradient(135deg,#ffd86b,#ff9f6b);
+      box-shadow:0 6px 18px rgba(0,0,0,0.45);
+    }
+    .meta{font-size:13px;color:var(--muted)}
+    .percent{font-weight:800;color:var(--accent1);margin-left:8px}
+
+    /* ---- right column small stats ---- */
+    .stat{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:10px;border-radius:10px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.02)}
+    .big-num{font-size:20px;font-weight:800;color:var(--accent1);}
+
+    /* ---- history rows ---- */
+    .hist-list{display:flex;flex-direction:column;gap:6px;max-height:360px;overflow:auto}
+    .hist-row{display:flex;justify-content:space-between;padding:8px;border-radius:8px;background:linear-gradient(180deg,rgba(0,0,0,0.15),transparent);border:1px solid rgba(255,255,255,0.02)}
+    .hist-win{border-left:4px solid rgba(127,255,178,0.14)}
+    .hist-pay{border-left:4px solid rgba(125,211,252,0.12)}
+
+    /* ---- controls ---- */
+    .controls{display:flex;gap:8px;margin-top:10px}
+    .btn{padding:8px 12px;border-radius:8px;border:none;background:linear-gradient(90deg,var(--accent2),#3aaaf0);color:#012433;font-weight:700;cursor:pointer}
+    .btn.alt{background:linear-gradient(90deg,#ffd86b,#ffb86b);color:#111}
+
+    /* ---- winner banner ---- */
+    .winner-banner{margin-top:10px;padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(255,216,107,0.08), rgba(125,211,252,0.03));border:1px solid rgba(255,216,107,0.12);font-weight:700}
+
+  </style>
 </head>
 <body>
-<h1>Shulker Kasyno</h1>
-<div id="countdown">Odświeżenie za 60s</div>
-<ul id="payments"></ul>
+  <div class="wrap">
+
+    <!-- TOP -->
+    <div class="top">
+      <div class="vault">
+        <div class="label">Skarbiec (Vault)</div>
+        <div class="value" id="vault">0</div>
+        <div class="muted" id="vault-sub">ostatnia zmiana: -</div>
+      </div>
+
+      <div class="title">
+        <h1>Kasyno Shulker — Panel</h1>
+        <p>Komenda: <code>/pay <b>Vexxiann</b> $$$</code> · Auto-losowanie 60s</p>
+      </div>
+
+      <div class="clock">
+        <div id="clock-large">--:--:--</div>
+        <div class="muted" style="font-size:12px">Następne losowanie za: <span id="countdown-small">60s</span></div>
+      </div>
+    </div>
+
+    <!-- GRID: left players, center history + main, right stats -->
+    <div class="grid">
+
+      <!-- LEFT: Players -->
+      <div class="card">
+        <h3>Gracze (lista udziałów)</h3>
+        <div class="players" id="players"></div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+          <div class="muted">Suma w puli:</div>
+          <div class="big-num" id="pool-sum">0</div>
+        </div>
+
+        <div class="controls">
+          <button class="btn alt" id="manual-draw">Losuj teraz</button>
+          <button class="btn" id="btn-fetch">Odśwież dane</button>
+        </div>
+
+        <div id="last-winner" class="winner-banner" style="display:none"></div>
+      </div>
+
+      <!-- CENTER: Historia + aktywne losowanie -->
+      <div class="card">
+        <h3>Historia (ostatnie)</h3>
+        <div style="display:flex;gap:12px;margin-bottom:8px">
+          <div class="muted">Ostatnie wygrane</div>
+          <div class="muted">Ostatnie wpłaty</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div class="hist-list" id="hist-wins"></div>
+          </div>
+          <div>
+            <div class="hist-list" id="hist-pays"></div>
+          </div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;height:1px;background:rgba(255,255,255,0.03)">
+
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="muted">Licznik do losowania</div>
+            <div style="font-size:26px;font-weight:800;color:var(--accent1)" id="countdown">60s</div>
+          </div>
+
+          <div style="text-align:right">
+            <div class="muted">Tryb losowania</div>
+            <div style="font-weight:700">Klient-side (rekomendowane: serwer-side)</div>
+            <div class="muted" style="font-size:13px;margin-top:6px">Losowanie ważone wg wpłat</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Stats -->
+      <div class="card">
+        <h3>Statystyki sesji</h3>
+
+        <div class="stat">
+          <div class="muted">Największy szczęściarz</div>
+          <div id="stat-top-lucky" style="font-weight:800">-</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Największa wygrana</div>
+          <div id="stat-top-win" style="font-weight:800">-</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Najwięcej zwycięstw</div>
+          <div id="stat-most-wins" style="font-weight:800">-</div>
+        </div>
+
+        <div style="margin-top:12px" class="muted">Informacje techniczne</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px">
+          Panel pobiera dane z <code>/data.json</code> jeśli dostępne, a w przeciwnym razie używa lokalnych (mock). Możesz też dodać WebSocket <code>/ws</code>.
+        </div>
+      </div>
+
+    </div> <!-- end grid -->
+
+  </div> <!-- end wrap -->
 
 <script>
-const paymentsList = document.getElementById('payments');
-const countdownElem = document.getElementById('countdown');
+/*
+  Kasyno Shulker — wersja PRO
+  - Auto losowanie co 60s
+  - Próba pobrania /data.json co POLL_MS
+  - Fallback do lokalnych mocków
+  - Weighted random draw wg amount
+  - Prosty tracking statystyk
+*/
+
+/* ---- Konfiguracja ---- */
+const DATA_URL = '/data.json';      // opcjonalny endpoint
+const WS_URL = (location.protocol === 'https:'? 'wss://' : 'ws://') + location.host + '/ws';
+const POLL_MS = 6000;
+const DRAW_MS = 60000;
+
+/* ---- Stan ---- */
+let state = {
+  vault: 0,
+  players: [],      // {name, amount}
+  history: [],      // {type: 'win'|'pay', player, amount, time}
+  stats: {
+    topLucky: null,
+    topWin: null,
+    winsCount: {},   // {name:count}
+    lossesCount: {}
+  },
+  nextDrawAt: null
+};
+
+/* ---- Mock początkowy (jeśli brak /data.json) ---- */
+function resetMock(){
+  state.vault = 1920000;
+  state.players = [
+    {name:'fht_', amount:905},
+    {name:'MAAAJKJ', amount:93520},
+    {name:'Dattio', amount:12000},
+    {name:'maskaraboxpvp', amount:1985}
+  ];
+  state.history = [
+    {type:'win', player:'MAAAJKJ', amount:93520, time: new Date().toISOString()},
+    {type:'pay', player:'Dattio', amount:12000, time: new Date().toISOString()}
+  ];
+  state.stats = { topLucky:'MAAAJKJ', topWin:93520, winsCount:{}, lossesCount:{} };
+  renderAll();
+}
+
+/* ---- Utilities ---- */
+function fmt(n){
+  if(n >= 1e6) return (n/1e6).toFixed(2)+'M';
+  if(n >= 1e3) return (n/1e3).toFixed(0)+'K';
+  return n.toString();
+}
+function isoNow(){ return new Date().toISOString(); }
+function timeNowStr(){ let d=new Date(); return d.toLocaleTimeString(); }
+
+/* ---- Fetching (tryb: poll + optional ws) ---- */
+async function fetchData(){
+  try{
+    const res = await fetch(DATA_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('no data');
+    const json = await res.json();
+    // Oczekiwana struktura: {vault, players:[{name,amount}], history:[...], next_draw_at}
+    if(json.vault !== undefined) state.vault = json.vault;
+    if(Array.isArray(json.players)) state.players = json.players.map(p=>({name:p.name, amount: Number(p.amount)}));
+    if(Array.isArray(json.history)) state.history = json.history.slice(-50);
+    if(json.next_draw_at) state.nextDrawAt = new Date(json.next_draw_at);
+    renderAll();
+    return true;
+  }catch(e){
+    // console.log('fetch failed', e);
+    return false;
+  }
+}
+
+/* ---- WebSocket (opcjonalny) ---- */
+let ws;
+function tryConnectWS(){
+  if(!('WebSocket' in window)) return;
+  try{
+    ws = new WebSocket(WS_URL);
+    ws.onopen = ()=> console.log('WS: connected');
+    ws.onmessage = (evt)=>{
+      try {
+        const data = JSON.parse(evt.data);
+        // przyjmujemy podobną strukturę jak /data.json
+        if(data.vault !== undefined) state.vault = data.vault;
+        if(Array.isArray(data.players)) state.players = data.players.map(p=>({name:p.name, amount:Number(p.amount)}));
+        if(Array.isArray(data.history)) state.history = data.history.slice(-50);
+        renderAll();
+      } catch(e){}
+    };
+    ws.onclose = ()=> console.log('WS: closed');
+  }catch(e){}
+}
+
+/* ---- Renderowanie ---- */
+function renderVault(){
+  document.getElementById('vault').textContent = fmt(state.vault);
+  document.getElementById('vault-sub').textContent = 'zaktualizowano: ' + timeNowStr();
+}
+function renderPlayers(){
+  const box = document.getElementById('players');
+  box.innerHTML = '';
+  let total = state.players.reduce((s,p)=>s + (Number(p.amount)||0), 0);
+  document.getElementById('pool-sum').textContent = fmt(total);
+
+  if(total === 0){
+    box.innerHTML = '<div class="muted">Brak wpłat</div>'; return;
+  }
+
+  // sortuj po kwocie
+  state.players.sort((a,b)=>b.amount - a.amount);
+
+  state.players.forEach(p=>{
+    const pct = total === 0 ? 0 : ((p.amount/total)*100).toFixed(2);
+    const el = document.createElement('div');
+    el.className = 'player';
+    const initials = (p.name || 'NN').slice(0,2).toUpperCase();
+    el.innerHTML = `
+      <div class="left">
+        <div class="avatar">${initials}</div>
+        <div>
+          <div style="font-weight:700">${p.name}</div>
+          <div class="meta">Stawka: ${fmt(p.amount)}</div>
+        </div>
+      </div>
+      <div><span style="font-weight:700">${fmt(p.amount)}</span><span class="percent">${pct}%</span></div>
+    `;
+    box.appendChild(el);
+  });
+}
+function renderHistory(){
+  const wins = document.getElementById('hist-wins');
+  const pays = document.getElementById('hist-pays');
+  wins.innerHTML = ''; pays.innerHTML = '';
+  // ostatnie 40
+  const list = (state.history || []).slice(-40).reverse();
+  list.forEach(h=>{
+    const row = document.createElement('div');
+    row.className = 'hist-row ' + (h.type === 'win' ? 'hist-win' : 'hist-pay');
+    row.innerHTML = `<div style="font-weight:700">${h.player}</div><div class="muted">${new Date(h.time||Date()).toLocaleTimeString()}</div><div style="font-weight:800">${fmt(h.amount)}</div>`;
+    if(h.type === 'win') wins.appendChild(row);
+    else pays.appendChild(row);
+  });
+}
+function renderStats(){
+  document.getElementById('stat-top-lucky').textContent = state.stats.topLucky || '-';
+  document.getElementById('stat-top-win').textContent = state.stats.topWin ? fmt(state.stats.topWin) : '-';
+  // simple most wins calculation
+  const wins = state.stats.winsCount || {};
+  const sortedWins = Object.keys(wins).sort((a,b)=> (wins[b]||0) - (wins[a]||0));
+  document.getElementById('stat-most-wins').textContent = sortedWins.length ? `${sortedWins[0]} — ${wins[sortedWins[0]]}x` : '-';
+}
+function renderAll(){
+  renderVault();
+  renderPlayers();
+  renderHistory();
+  renderStats();
+}
+
+/* ---- Weighted draw ---- */
+function weightedDraw(){
+  if(!state.players || state.players.length === 0) return null;
+  const total = state.players.reduce((s,p)=>s + Number(p.amount||0), 0);
+  if(total <= 0) return null;
+  const r = Math.random() * total;
+  let acc = 0;
+  for(const p of state.players){
+    acc += Number(p.amount||0);
+    if(r <= acc) return p;
+  }
+  return state.players[state.players.length - 1]; // safety
+}
+
+/* ---- Handle draw results (update history & stats) ---- */
+function handleWinner(winner){
+  if(!winner) return;
+  // example payout logic: payout = vault * 0.05 * random factor (for demo)
+  const payout = Math.max( Math.round(Math.min(state.vault, winner.amount * 50)), 100 ); // demo logic
+  // update vault
+  state.vault = Math.max(0, state.vault - payout);
+  // push to history
+  const rec = { type:'win', player: winner.name, amount: payout, time: isoNow() };
+  state.history.push(rec);
+  // update stats
+  if(!state.stats.winsCount[winner.name]) state.stats.winsCount[winner.name] = 0;
+  state.stats.winsCount[winner.name] += 1;
+  if(!state.stats.topWin || payout > state.stats.topWin) state.stats.topWin = payout;
+  state.stats.topLucky = winner.name;
+
+  // show banner
+  const banner = document.getElementById('last-winner');
+  banner.style.display = 'block';
+  banner.textContent = `${winner.name} wygrał ${fmt(payout)}! (szansa ${( (winner.amount / state.players.reduce((s,p)=>s+p.amount,0)) * 100 ).toFixed(2)}%)`;
+  // auto hide after 10s
+  setTimeout(()=>{ banner.style.display = 'none'; }, 10000);
+
+  renderAll();
+}
+
+/* ---- Timer / Auto-draw ---- */
 let countdown = 60;
-let previousPayments = [];
-
-// Funkcja do anonimizowania graczy
-function anonymizeUser(index) {
-  return `Gracz #${index + 1}`;
+let drawIntervalHandle = null;
+function startAutoDraw(){
+  // reset countdown to 60
+  countdown = 60;
+  document.getElementById('countdown').textContent = countdown + 's';
+  document.getElementById('countdown-small').textContent = countdown + 's';
+  if(drawIntervalHandle) clearInterval(drawIntervalHandle);
+  drawIntervalHandle = setInterval(()=>{
+    countdown--;
+    if(countdown <= 0){
+      // do draw
+      const winner = weightedDraw();
+      handleWinner(winner);
+      countdown = 60;
+    }
+    document.getElementById('countdown').textContent = countdown + 's';
+    document.getElementById('countdown-small').textContent = countdown + 's';
+  }, 1000);
 }
 
-async function fetchPayments() {
-  try {
-    const res = await fetch('https://twoj-serwer.com/api/payments'); // <-- podmień na swoje API
-    const data = await res.json();
+/* ---- Manual controls binding ---- */
+document.getElementById('manual-draw').addEventListener('click', ()=>{
+  const winner = weightedDraw();
+  handleWinner(winner);
+  // reset countdown
+  countdown = 60;
+});
+document.getElementById('btn-fetch').addEventListener('click', async ()=>{
+  const ok = await fetchData();
+  if(!ok) alert('Nie znaleziono /data.json — użyto lokalnych danych.');
+});
 
-    paymentsList.innerHTML = '';
-    data.forEach((p, index) => {
-      const li = document.createElement('li');
-      li.textContent = `${anonymizeUser(index)} → ${p.amount}`;
-
-      // Jeśli nowa płatność, dodaj efekt animacji
-      if (!previousPayments.some(prev => prev.user === p.user && prev.amount === p.amount)) {
-        li.classList.add('new');
-      }
-
-      paymentsList.appendChild(li);
-    });
-
-    previousPayments = data;
-  } catch (e) {
-    console.error('Błąd pobierania płatności:', e);
+/* ---- Periodic poller ---- */
+setInterval(async ()=>{
+  const ok = await fetchData();
+  if(!ok){
+    // jeśli fetch nieudany i brak graczy -> fallback do mock
+    if(!state.players || state.players.length === 0) resetMock();
+  } else {
+    // jeśli fetch zadziałał, możesz ustawić nextDrawAt na podstawie danych
   }
+}, POLL_MS);
+
+/* ---- Try WS ---- */
+tryConnectWS();
+
+/* ---- Clock & initial render ---- */
+setInterval(()=> {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  const s = String(d.getSeconds()).padStart(2,'0');
+  document.getElementById('clock-large').textContent = `${h}:${m}:${s}`;
+}, 1000);
+
+/* ---- Start ---- */
+(async function init(){
+  // spróbuj pobrać dane; jeśli brak -> mock
+  const ok = await fetchData();
+  if(!ok) resetMock();
+  startAutoDraw();
+  renderAll();
+})();
+<script>
+async function loadPayments() {
+    try {
+        const res = await fetch("https://raw.githubusercontent.com/xduchx7-dotcom/kasyno/main/payments.json");
+        const data = await res.json();
+
+        const box = document.getElementById("payments");
+        box.innerHTML = "";
+
+        data.slice().reverse().forEach(entry => {
+            const div = document.createElement("div");
+            div.textContent = `${entry.player} → ${entry.amount}`;
+            box.appendChild(div);
+        });
+
+    } catch (err) {
+        console.error("Error loading payments:", err);
+    }
 }
 
-function updateCountdown() {
-  countdownElem.textContent = `Odświeżenie za ${countdown}s`;
-  if (countdown === 0) {
-    fetchPayments();
-    countdown = 60;
-  }
-  countdown--;
-}
+// odświeżanie co 5 sekund
+setInterval(loadPayments, 5000);
+loadPayments();
+</script>
 
-// Start
-fetchPayments();
-setInterval(updateCountdown, 1000);
+<div id="payments"></div>
+
 </script>
 </body>
 </html>
-
