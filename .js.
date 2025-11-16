@@ -1,90 +1,75 @@
-// Kasyno Shulker - script.js
-const playersListEl = document.getElementById("players-list");
-const poolSumEl = document.getElementById("pool-sum");
-const historyEl = document.getElementById("history");
-const countdownEl = document.getElementById("countdown");
-const drawButton = document.getElementById("draw-now");
+// --- KONFIGURACJA ---
+const PLATNOSCI_FILE = 'platnosci.json'; // Twój plik z wpłatami
+const ODŚWIEŻANIE_MS = 5000; // co ile ms odświeżamy dane
+let gracze = [];
+let sumaPuli = 0;
+let licznik = 60; // sekundy do losowania
 
-let players = [];
-let poolSum = 0;
-let history = [];
-let countdown = 60; // sekundy
-let countdownInterval;
+// --- ELEMENTY HTML ---
+const listaGraczyEl = document.getElementById('lista-graczy');
+const sumaPuliEl = document.getElementById('suma-puli');
+const licznikEl = document.getElementById('licznik');
+const losujBtn = document.getElementById('losuj');
 
-// Wczytanie wpłat z pliku płatności.json
-async function loadPayments() {
-  try {
-    const response = await fetch("płatności.json");
-    const data = await response.json();
-    players = data.players || [];
-    poolSum = players.reduce((sum, p) => sum + p.amount, 0);
-    updateUI();
-  } catch (err) {
-    console.error("Błąd przy wczytywaniu wpłat:", err);
-  }
-}
-
-// Aktualizacja panelu
-function updateUI() {
-  // Lista graczy
-  playersListEl.innerHTML = players
-    .map(p => `<li>${p.name}: $${p.amount}</li>`)
-    .join("");
-
-  // Suma w puli
-  poolSumEl.textContent = `$${poolSum}`;
-
-  // Historia ostatnich wygranych
-  historyEl.innerHTML = history
-    .map(h => `<li>${h.winner} wygrał $${h.amount}</li>`)
-    .join("");
-}
-
-// Losowanie zwycięzcy
-function drawWinner() {
-  if (players.length === 0) {
-    alert("Brak graczy w puli!");
-    return;
-  }
-
-  // Losowanie wg wpłat (ważone)
-  const total = poolSum;
-  let rand = Math.random() * total;
-  let winner;
-  for (const player of players) {
-    if (rand < player.amount) {
-      winner = player;
-      break;
+// --- FUNKCJE ---
+async function pobierzDane() {
+    try {
+        const response = await fetch(PLATNOSCI_FILE);
+        if (!response.ok) throw new Error('Nie udało się pobrać danych');
+        const dane = await response.json();
+        gracze = dane;
+        sumaPuli = gracze.reduce((acc, g) => acc + Number(g.kwota || 0), 0);
+        aktualizujWidok();
+    } catch (err) {
+        console.error(err);
+        // jeśli błąd, można użyć pustej listy
+        gracze = [];
+        sumaPuli = 0;
+        aktualizujWidok();
     }
-    rand -= player.amount;
-  }
-
-  if (winner) {
-    alert(`${winner.name} wygrał $${poolSum}!`);
-    history.unshift({ winner: winner.name, amount: poolSum });
-    players = [];
-    poolSum = 0;
-    updateUI();
-    countdown = 60;
-  }
 }
 
-// Odliczanie do automatycznego losowania
-function startCountdown() {
-  countdownInterval = setInterval(() => {
-    countdown--;
-    countdownEl.textContent = countdown + "s";
-    if (countdown <= 0) {
-      drawWinner();
-    }
-  }, 1000);
+function aktualizujWidok() {
+    // Lista graczy
+    listaGraczyEl.innerHTML = '';
+    gracze.forEach(g => {
+        const li = document.createElement('li');
+        li.textContent = `${g.nick}: $${g.kwota}`;
+        listaGraczyEl.appendChild(li);
+    });
+    // Suma puli
+    sumaPuliEl.textContent = `Suma w puli: $${sumaPuli}`;
+    // Licznik
+    licznikEl.textContent = `Następne losowanie za: ${licznik}s`;
 }
 
-// Przyciski
-drawButton.addEventListener("click", drawWinner);
+function startLicznik() {
+    setInterval(() => {
+        licznik--;
+        if (licznik <= 0) {
+            licznik = 60; // reset licznika
+            losuj();
+        }
+        aktualizujWidok();
+    }, 1000);
+}
 
-// Start
-loadPayments();
-updateUI();
-startCountdown();
+function losuj() {
+    if (gracze.length === 0) return alert('Brak graczy do losowania!');
+    // Losowanie zwycięzcy
+    const index = Math.floor(Math.random() * gracze.length);
+    const zwyciezca = gracze[index];
+    alert(`🎉 Wygrał ${zwyciezca.nick}! Kwota: $${zwyciezca.kwota}`);
+    // reset puli i graczy po losowaniu
+    gracze = [];
+    sumaPuli = 0;
+    aktualizujWidok();
+}
 
+// --- EVENTY ---
+losujBtn.addEventListener('click', losuj);
+
+// --- URUCHOMIENIE ---
+pobierzDane(); // pierwsze pobranie
+startLicznik(); // licznik
+setInterval(pobierzDane, ODŚWIEŻANIE_MS); // odświeżanie co 5s
