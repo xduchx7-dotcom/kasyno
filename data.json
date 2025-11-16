@@ -1,10 +1,11 @@
 {
-  "vault": 0,
-  "players": [],
+  "vault": 100000,
+  "players": [
+    {"name": "Vexxiann", "amount": 5000},
+    {"name": "Gracz2", "amount": 3000}
+  ],
   "history": [
-    {
-      "winner": null,
-      "amount": 0
-    }
-  ]
+    {"winner": "Vexxiann", "amount": 10000, "time": "2025-11-16T10:00:00Z"}
+  ],
+  "next_draw_at": "2025-11-16T12:00:00Z"
 }
