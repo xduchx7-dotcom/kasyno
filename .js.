@@ -1,43 +1,90 @@
-// ==== DANE KASYNOWE ====
-let kasa = {
-    gracze: [],  // { nick: "Vexxiann", kwota: 100 }
-    suma: 0
-};
+// Kasyno Shulker - script.js
+const playersListEl = document.getElementById("players-list");
+const poolSumEl = document.getElementById("pool-sum");
+const historyEl = document.getElementById("history");
+const countdownEl = document.getElementById("countdown");
+const drawButton = document.getElementById("draw-now");
 
-// Funkcja dodająca wpłatę
-function dodajWplate(nick, kwota) {
-    kwota = Number(kwota);
-    if (!nick || isNaN(kwota) || kwota <= 0) return;
+let players = [];
+let poolSum = 0;
+let history = [];
+let countdown = 60; // sekundy
+let countdownInterval;
 
-    // Sprawdź czy gracz już jest na liście
-    let gracz = kasa.gracze.find(g => g.nick === nick);
-    if (gracz) {
-        gracz.kwota += kwota;
-    } else {
-        kasa.gracze.push({ nick, kwota });
-    }
-
-    // Aktualizuj sumę puli
-    kasa.suma = kasa.gracze.reduce((acc, g) => acc + g.kwota, 0);
-
-    // Odśwież panel
-    odswiezPanel();
+// Wczytanie wpłat z pliku płatności.json
+async function loadPayments() {
+  try {
+    const response = await fetch("płatności.json");
+    const data = await response.json();
+    players = data.players || [];
+    poolSum = players.reduce((sum, p) => sum + p.amount, 0);
+    updateUI();
+  } catch (err) {
+    console.error("Błąd przy wczytywaniu wpłat:", err);
+  }
 }
 
-// Funkcja odświeżająca panel w HTML
-function odswiezPanel() {
-    // Lista graczy
-    const lista = document.getElementById("gracze-lista");
-    if (lista) {
-        lista.innerHTML = kasa.gracze.map(g => `<li>${g.nick}: $${g.kwota}</li>`).join("");
-    }
+// Aktualizacja panelu
+function updateUI() {
+  // Lista graczy
+  playersListEl.innerHTML = players
+    .map(p => `<li>${p.name}: $${p.amount}</li>`)
+    .join("");
 
-    // Suma w puli
-    const pula = document.getElementById("suma-puli");
-    if (pula) {
-        pula.textContent = `$${kasa.suma}`;
-    }
+  // Suma w puli
+  poolSumEl.textContent = `$${poolSum}`;
+
+  // Historia ostatnich wygranych
+  historyEl.innerHTML = history
+    .map(h => `<li>${h.winner} wygrał $${h.amount}</li>`)
+    .join("");
 }
 
-// ==== PRZYKŁADOWE WYWOŁANIE ====
-dodajWplate("Vexxiann", 100); // symuluje wpłatę 100$
+// Losowanie zwycięzcy
+function drawWinner() {
+  if (players.length === 0) {
+    alert("Brak graczy w puli!");
+    return;
+  }
+
+  // Losowanie wg wpłat (ważone)
+  const total = poolSum;
+  let rand = Math.random() * total;
+  let winner;
+  for (const player of players) {
+    if (rand < player.amount) {
+      winner = player;
+      break;
+    }
+    rand -= player.amount;
+  }
+
+  if (winner) {
+    alert(`${winner.name} wygrał $${poolSum}!`);
+    history.unshift({ winner: winner.name, amount: poolSum });
+    players = [];
+    poolSum = 0;
+    updateUI();
+    countdown = 60;
+  }
+}
+
+// Odliczanie do automatycznego losowania
+function startCountdown() {
+  countdownInterval = setInterval(() => {
+    countdown--;
+    countdownEl.textContent = countdown + "s";
+    if (countdown <= 0) {
+      drawWinner();
+    }
+  }, 1000);
+}
+
+// Przyciski
+drawButton.addEventListener("click", drawWinner);
+
+// Start
+loadPayments();
+updateUI();
+startCountdown();
+
