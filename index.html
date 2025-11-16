@@ -3,163 +3,112 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kasyno</title>
+<title>Shulker Kasyno</title>
 <style>
-:root {
-  --main-bg: linear-gradient(to right, #1e3c72, #2a5298);
-  --card-bg: #fff;
-  --text-color: #333;
-  --accent-color: #f39c12;
-}
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: var(--main-bg);
-  color: var(--text-color);
-}
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background: rgba(255,255,255,0.1);
-  color: #fff;
-  font-weight: bold;
-}
-.top-bar span { margin: 0 10px; }
-.container {
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
-  gap: 10px;
-  padding: 10px;
-}
-.card {
-  background: var(--card-bg);
-  padding: 10px;
-  border-radius: 5px;
-}
-.card h3 { margin-top: 0; }
-button { padding: 5px 10px; margin: 5px 0; cursor: pointer; }
+  body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  h1 {
+    color: #ff6aff;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px #000;
+  }
+
+  #countdown {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #00ffcc;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #000;
+  }
+
+  #payments {
+    list-style: none;
+    padding: 0;
+    width: 350px;
+  }
+
+  #payments li {
+    background: #222;
+    margin: 8px 0;
+    padding: 12px;
+    border-radius: 10px;
+    box-shadow: 1px 1px 8px #000;
+    transition: all 0.3s ease;
+  }
+
+  #payments li.new {
+    background: #00ffcc;
+    color: #000;
+    font-weight: bold;
+    animation: highlight 1s ease-in-out;
+  }
+
+  @keyframes highlight {
+    0% { background: #00ffcc; }
+    100% { background: #222; color: #fff; }
+  }
 </style>
 </head>
 <body>
-<div class="top-bar">
-  <span id="clock">00:00:00</span>
-  <span id="vault">💰 0</span>
-  <span>Kasyno</span>
-</div>
-
-<div class="container">
-  <div class="card" id="players">
-    <h3>Gracze</h3>
-    <button onclick="draw()">Losuj</button>
-    <div id="playersList"></div>
-  </div>
-  <div class="card" id="history">
-    <h3>Historia</h3>
-    <div id="historyList"></div>
-  </div>
-  <div class="card" id="stats">
-    <h3>Statystyki</h3>
-    <div id="statsList"></div>
-  </div>
-</div>
-
-<div class="container">
-  <div class="card" id="payments">
-    <h3>Płatności</h3>
-    <div id="paymentsList"></div>
-  </div>
-</div>
+<h1>Shulker Kasyno</h1>
+<div id="countdown">Odświeżenie za 60s</div>
+<ul id="payments"></ul>
 
 <script>
-let data = {players:[],vault:0,history:[],stats:{}};
-const clock = document.getElementById("clock");
-const vaultEl = document.getElementById("vault");
-const playersList = document.getElementById("playersList");
-const historyList = document.getElementById("historyList");
-const statsList = document.getElementById("statsList");
-const paymentsList = document.getElementById("paymentsList");
+const paymentsList = document.getElementById('payments');
+const countdownElem = document.getElementById('countdown');
+let countdown = 60;
+let previousPayments = [];
 
-// Zegar
-function updateClock() {
-  const now = new Date();
-  clock.textContent = now.toLocaleTimeString();
+// Funkcja do anonimizowania graczy
+function anonymizeUser(index) {
+  return `Gracz #${index + 1}`;
 }
-setInterval(updateClock,1000);
-updateClock();
 
-// Fetch data.json
-async function loadData() {
+async function fetchPayments() {
   try {
-    const res = await fetch("/data.json");
-    if(!res.ok) throw new Error("Brak pliku data.json");
-    data = await res.json();
-  } catch(e) {
-    console.warn(e,"- używam mock danych");
-    data = {
-      players:[{name:"Jan",weight:5},{name:"Anna",weight:3}],
-      vault:100,
-      history:[],
-      stats:{Jan:0,Anna:0}
-    };
-  }
-  render();
-}
+    const res = await fetch('https://twoj-serwer.com/api/payments'); // <-- podmień na swoje API
+    const data = await res.json();
 
-// Renderowanie
-function render() {
-  vaultEl.textContent = `💰 ${data.vault}`;
-  
-  playersList.innerHTML = data.players.map(p=>`<div>${p.name} (${p.weight})</div>`).join("");
-  
-  historyList.innerHTML = data.history.map(h=>`<div>${h}</div>`).join("");
-  
-  statsList.innerHTML = Object.entries(data.stats).map(([k,v])=>`<div>${k}: ${v}</div>`).join("");
-}
+    paymentsList.innerHTML = '';
+    data.forEach((p, index) => {
+      const li = document.createElement('li');
+      li.textContent = `${anonymizeUser(index)} → ${p.amount}`;
 
-// Losowanie ważone
-function draw() {
-  const total = data.players.reduce((a,p)=>a+p.weight,0);
-  let rnd = Math.random()*total;
-  for(let p of data.players){
-    if(rnd<p.weight){
-      alert(`Wylosowano: ${p.name}`);
-      data.history.push(p.name);
-      data.stats[p.name] = (data.stats[p.name]||0)+1;
-      render();
-      return;
-    }
-    rnd -= p.weight;
+      // Jeśli nowa płatność, dodaj efekt animacji
+      if (!previousPayments.some(prev => prev.user === p.user && prev.amount === p.amount)) {
+        li.classList.add('new');
+      }
+
+      paymentsList.appendChild(li);
+    });
+
+    previousPayments = data;
+  } catch (e) {
+    console.error('Błąd pobierania płatności:', e);
   }
 }
 
-// WebSocket
-try {
-  const ws = new WebSocket(`ws://${location.host}/ws`);
-  ws.onmessage = e=>{
-    const msg = JSON.parse(e.data);
-    if(msg.type==="update"){ data = msg.data; render(); }
-  };
-} catch(e) {
-  console.warn("Brak WS:",e);
-}
-
-// Płatności z GitHub
-async function loadPayments() {
-  try {
-    const res = await fetch("https://raw.githubusercontent.com/xduchx7-dotcom/kasyno/main/payments.json");
-    if(!res.ok) throw new Error("Nie udało się pobrać payments.json");
-    const payments = await res.json();
-    paymentsList.innerHTML = payments.map(p=>`<div>${p.user}: ${p.amount}</div>`).join("");
-  } catch(e) {
-    paymentsList.innerHTML = "<div>Brak danych lub błąd CORS</div>";
-    console.warn(e);
+function updateCountdown() {
+  countdownElem.textContent = `Odświeżenie za ${countdown}s`;
+  if (countdown === 0) {
+    fetchPayments();
+    countdown = 60;
   }
+  countdown--;
 }
 
-loadData();
-loadPayments();
+// Start
+fetchPayments();
+setInterval(updateCountdown, 1000);
 </script>
 </body>
 </html>
